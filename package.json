@@ -9,7 +9,7 @@
         "fetch",
         "http"
     ],
-    "license": "Apache-2.0",
+    "license": "MIT",
     "name": "@stores.com/http-error",
     "publishConfig": {
         "access": "public"
