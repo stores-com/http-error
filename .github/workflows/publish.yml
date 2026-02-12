@@ -15,7 +15,7 @@ jobs:
     - name: Verify tests passed
       env:
         GH_TOKEN: ${{ github.token }}
-      run: gh run list --workflow=test.yml --branch=main --limit=1 --json conclusion --jq '.[0].conclusion' | grep -q success
+      run: gh run list --repo ${{ github.repository }} --workflow=test.yml --branch=main --limit=1 --json conclusion --jq '.[0].conclusion' | grep -q success
 
     - name: Checkout
       uses: actions/checkout@v6
