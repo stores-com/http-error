@@ -1,8 +1,7 @@
 name: Publish
 
 on:
-  push:
-    tags: ['v*']
+  repository_dispatch:
   workflow_dispatch:
 
 jobs:
@@ -28,6 +27,6 @@ jobs:
       run: npm publish --provenance
 
     - name: Create GitHub Release
-      run: gh release create ${{ github.ref_name }} --generate-notes
+      run: gh release create "v$(node -p "require('./package.json').version")" --generate-notes
       env:
         GH_TOKEN: ${{ github.token }}
