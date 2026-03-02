@@ -2,6 +2,8 @@
 
 [![Test](https://github.com/stores-com/http-error/actions/workflows/test.yml/badge.svg)](https://github.com/stores-com/http-error/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/stores-com/http-error/badge.svg)](https://coveralls.io/github/stores-com/http-error)
+[![npm version](https://img.shields.io/npm/v/@stores.com/http-error)](https://www.npmjs.com/package/@stores.com/http-error)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Error class for non-ok HTTP responses from the Fetch API. Captures the response body as text and JSON for debugging.
 
