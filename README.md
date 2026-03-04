@@ -1,7 +1,7 @@
 # http-error
 
 [![Test](https://github.com/stores-com/http-error/actions/workflows/test.yml/badge.svg)](https://github.com/stores-com/http-error/actions/workflows/test.yml)
-[![Coverage Status](https://coveralls.io/repos/github/stores-com/http-error/badge.svg?branch=main)](https://coveralls.io/github/stores-com/http-error?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/stores-com/http-error/badge.svg?branch=main&t=He5z4J)](https://coveralls.io/github/stores-com/http-error?branch=main)
 [![npm version](https://img.shields.io/npm/v/@stores.com/http-error)](https://www.npmjs.com/package/@stores.com/http-error)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
