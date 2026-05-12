@@ -44,7 +44,25 @@ try {
 
 ### APIs that return errors in the body
 
-Some APIs carry application-level failures in the response body rather than (or in addition to) HTTP status codes. `from()` reads the body and aggregates an `errors[]` envelope into the message automatically — for each entry, the first present of `message` or `detail` is used, joined by `; `. Codes and any other per-error fields stay on `err.json.errors[]`. The default `"${status} ${statusText}"` message is preserved when the body has no `errors[]`.
+Some APIs carry application-level failures in the response body rather than (or in addition to) HTTP status codes. `from()` reads the body and aggregates an `errors[]` envelope into the message automatically — for each entry, the first present of `message` or `detail` is used, joined by `; `. Codes and any other per-error fields stay on `err.json.errors[]`.
+
+```javascript
+const response = await fetch('https://api.example.com/graphql', { /* ... */ });
+
+if (!response.ok) {
+    throw await HttpError.from(response);
+}
+
+const json = await response.json();
+
+if (json?.errors?.length) {
+    throw await HttpError.from(response);
+}
+
+return json;
+```
+
+The default `"${status} ${statusText}"` message is used when `from()` can't read the body (already consumed) or when the body has no `errors[]`.
 
 This covers two widely used envelope shapes:
 

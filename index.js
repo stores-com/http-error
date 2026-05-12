@@ -18,7 +18,12 @@ class HttpError extends Error {
      */
     static async from(response) {
         const err = new HttpError(response);
-        err.text = await response.clone().text().catch(() => {});
+
+        try {
+            err.text = await response.clone().text();
+        } catch {
+            // Body already consumed or otherwise unreadable
+        }
 
         if (err.text) {
             try {

@@ -100,4 +100,16 @@ test('HttpError', { concurrency: true }, async (t) => {
 
         assert.strictEqual(err.message, '500 Internal Server Error');
     });
+
+    t.test('should not throw when the response body has already been consumed', async () => {
+        const response = new Response('{"errors":[{"message":"x"}]}', { status: 200, statusText: 'OK' });
+        await response.json();
+
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.name, 'HttpError');
+        assert.strictEqual(err.message, '200 OK');
+        assert.strictEqual(err.text, undefined);
+        assert.strictEqual(err.json, undefined);
+    });
 });
