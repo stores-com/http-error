@@ -66,7 +66,7 @@ The default `"${status} ${statusText}"` message is used when `from()` can't read
 
 This covers two widely used envelope shapes:
 
-- [**GraphQL**](https://spec.graphql.org/October2021/#sec-Errors) — every response error entry includes a `message` string. Servers return 200 OK with a top-level `errors[]` (alongside `data`) for both partial and total failures. The same envelope is used by many REST APIs that signal application-level failures in the body rather than (or in addition to) HTTP status codes.
+- [**GraphQL**](https://spec.graphql.org/October2021/#sec-Errors) — every response error entry includes a `message` string. Servers return 200 OK with a top-level `errors[]` for both partial and total failures. The same envelope is used by many REST APIs that signal application-level failures in the body rather than (or in addition to) HTTP status codes.
 - [**JSON:API**](https://jsonapi.org/format/#errors) — error objects use `detail` for the per-occurrence explanation.
 
 ## API
