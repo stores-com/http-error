@@ -79,4 +79,33 @@ test('HttpError', { concurrency: true }, async (t) => {
         assert.strictEqual(err.message, 'Account locked');
         assert.deepStrictEqual(err.json, body);
     });
+
+    t.test('should aggregate JSON:API-style errors[] using detail', async () => {
+        const body = {
+            errors: [
+                { code: '422', detail: 'first name is required', title: 'Invalid Attribute' },
+                { code: '422', detail: 'email is malformed', title: 'Invalid Attribute' }
+            ]
+        };
+        const response = new Response(JSON.stringify(body), { status: 422, statusText: 'Unprocessable Entity' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, 'first name is required; email is malformed');
+    });
+
+    t.test('should fall back to title when neither message nor detail is present', async () => {
+        const body = { errors: [{ title: 'Service Unavailable' }] };
+        const response = new Response(JSON.stringify(body), { status: 503, statusText: 'Service Unavailable' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, 'Service Unavailable');
+    });
+
+    t.test('should keep default status message when errors[] entries have none of message/detail/title', async () => {
+        const body = { errors: [{ code: 'UNKNOWN' }] };
+        const response = new Response(JSON.stringify(body), { status: 500, statusText: 'Internal Server Error' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, '500 Internal Server Error');
+    });
 });
