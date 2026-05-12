@@ -49,4 +49,34 @@ test('HttpError', { concurrency: true }, async (t) => {
 
         assert.strictEqual(text, 'body');
     });
+
+    t.test('should aggregate body errors[] messages into err.message', async () => {
+        const body = {
+            errors: [
+                { code: 'RATING.INVALID', message: 'Invalid account number' },
+                { code: 'SERVICE.UNAVAILABLE', message: 'Service is currently unavailable' }
+            ]
+        };
+        const response = new Response(JSON.stringify(body), { status: 200, statusText: 'OK' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, 'Invalid account number; Service is currently unavailable');
+        assert.deepStrictEqual(err.json, body);
+    });
+
+    t.test('should leave message as status when body has no errors[]', async () => {
+        const response = new Response('{"foo":"bar"}', { status: 200, statusText: 'OK' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, '200 OK');
+    });
+
+    t.test('should aggregate errors[] even on non-2xx responses', async () => {
+        const body = { errors: [{ message: 'Account locked' }] };
+        const response = new Response(JSON.stringify(body), { status: 403, statusText: 'Forbidden' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, 'Account locked');
+        assert.deepStrictEqual(err.json, body);
+    });
 });

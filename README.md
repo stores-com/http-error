@@ -57,3 +57,5 @@ Async factory that creates an `HttpError` and captures the response body:
 - `err.cause` — the original `Response` object
 
 The original response is not consumed (uses `response.clone()`).
+
+If the parsed body carries an `errors[]` envelope (GraphQL `data.errors[]`, REST `errors[]`, etc.), `err.message` is set to every `errors[].message` joined by `; ` instead of the default `"${status} ${statusText}"`. The codes and any other per-error fields stay accessible via `err.json.errors[]`.

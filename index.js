@@ -28,6 +28,10 @@ class HttpError extends Error {
             }
         }
 
+        if (err.json?.errors?.length) {
+            err.message = err.json.errors.map(e => e.message).join('; ');
+        }
+
         return err;
     }
 }
