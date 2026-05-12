@@ -42,9 +42,9 @@ try {
 }
 ```
 
-### APIs that return 200 with an `errors[]` envelope
+### APIs that return errors in the body
 
-GraphQL servers (always 200, errors in `data.errors[]`), JSON:API, and some REST APIs (FedEx, etc.) carry application-level failures in the response body instead of relying on HTTP status codes. `from()` reads the body and aggregates the messages automatically — call it before consuming the body yourself so the internal `response.clone()` can read it:
+Some APIs carry application-level failures in the response body rather than (or in addition to) HTTP status codes. `from()` reads the body and aggregates an `errors[]` envelope automatically — call it before consuming the body yourself so the internal `response.clone()` can read it:
 
 ```javascript
 const response = await fetch('https://api.example.com/graphql', { /* ... */ });
@@ -58,6 +58,10 @@ return err.json; // success: use the body parsed by from()
 ```
 
 `err.message` is every `errors[].message` joined by `; `. Codes and other per-error fields stay on `err.json.errors[]`.
+
+This matches the convention defined by the [**GraphQL specification**](https://spec.graphql.org/October2021/#sec-Errors): every response error entry includes a `message` string, and servers return 200 OK with `data.errors[]` for both partial and total failures. The same envelope shape (`errors[].message`) is used by many REST APIs that signal application-level failures in the body rather than via HTTP status codes.
+
+[**JSON:API**](https://jsonapi.org/format/#errors) and [**RFC 9457 Problem Details**](https://datatracker.ietf.org/doc/html/rfc9457) define structurally similar error envelopes but use `detail` / `title` instead of `message`. Aggregation will still run for those (entries without `.message` join as `undefined`), so callers using those shapes should override `err.message` after construction.
 
 ## API
 
@@ -75,4 +79,4 @@ Async factory that creates an `HttpError` and captures the response body:
 
 The original response is not consumed (uses `response.clone()`).
 
-If the parsed body carries an `errors[]` envelope, `err.message` is set to every `errors[].message` joined by `; ` instead of the default `"${status} ${statusText}"`.
+If the parsed body carries an `errors[]` array, `err.message` is set to every `errors[].message` joined by `; ` instead of the default `"${status} ${statusText}"`. See [APIs that return errors in the body](#apis-that-return-errors-in-the-body) above.
