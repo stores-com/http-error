@@ -35,12 +35,29 @@ try {
         throw await HttpError.from(response);
     }
 } catch (err) {
-    console.error(err.message); // "404 Not Found"
+    console.error(err.message); // "404 Not Found" — or aggregated body errors[].message values
     console.error(err.text);    // Raw response body
     console.error(err.json);    // Parsed JSON (if applicable)
     console.error(err.cause);   // Original Response object
 }
 ```
+
+### APIs that return 200 with an `errors[]` envelope
+
+GraphQL servers (always 200, errors in `data.errors[]`), JSON:API, and some REST APIs (FedEx, etc.) carry application-level failures in the response body instead of relying on HTTP status codes. `from()` reads the body and aggregates the messages automatically — call it before consuming the body yourself so the internal `response.clone()` can read it:
+
+```javascript
+const response = await fetch('https://api.example.com/graphql', { /* ... */ });
+const err = await HttpError.from(response);
+
+if (!response.ok || err.json?.errors?.length) {
+    throw err;
+}
+
+return err.json; // success: use the body parsed by from()
+```
+
+`err.message` is every `errors[].message` joined by `; `. Codes and other per-error fields stay on `err.json.errors[]`.
 
 ## API
 
@@ -58,4 +75,4 @@ Async factory that creates an `HttpError` and captures the response body:
 
 The original response is not consumed (uses `response.clone()`).
 
-If the parsed body carries an `errors[]` envelope (GraphQL `data.errors[]`, REST `errors[]`, etc.), `err.message` is set to every `errors[].message` joined by `; ` instead of the default `"${status} ${statusText}"`. The codes and any other per-error fields stay accessible via `err.json.errors[]`.
+If the parsed body carries an `errors[]` envelope, `err.message` is set to every `errors[].message` joined by `; ` instead of the default `"${status} ${statusText}"`.
