@@ -49,4 +49,67 @@ test('HttpError', { concurrency: true }, async (t) => {
 
         assert.strictEqual(text, 'body');
     });
+
+    t.test('should aggregate body errors[] messages into err.message', async () => {
+        const body = {
+            errors: [
+                { code: 'RATING.INVALID', message: 'Invalid account number' },
+                { code: 'SERVICE.UNAVAILABLE', message: 'Service is currently unavailable' }
+            ]
+        };
+        const response = new Response(JSON.stringify(body), { status: 200, statusText: 'OK' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, 'Invalid account number; Service is currently unavailable');
+        assert.deepStrictEqual(err.json, body);
+    });
+
+    t.test('should leave message as status when body has no errors[]', async () => {
+        const response = new Response('{"foo":"bar"}', { status: 200, statusText: 'OK' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, '200 OK');
+    });
+
+    t.test('should aggregate errors[] even on non-2xx responses', async () => {
+        const body = { errors: [{ message: 'Account locked' }] };
+        const response = new Response(JSON.stringify(body), { status: 403, statusText: 'Forbidden' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, 'Account locked');
+        assert.deepStrictEqual(err.json, body);
+    });
+
+    t.test('should aggregate JSON:API-style errors[] using detail', async () => {
+        const body = {
+            errors: [
+                { code: '422', detail: 'first name is required', title: 'Invalid Attribute' },
+                { code: '422', detail: 'email is malformed', title: 'Invalid Attribute' }
+            ]
+        };
+        const response = new Response(JSON.stringify(body), { status: 422, statusText: 'Unprocessable Entity' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, 'first name is required; email is malformed');
+    });
+
+    t.test('should keep default status message when errors[] entries have neither message nor detail', async () => {
+        const body = { errors: [{ code: 'UNKNOWN', title: 'Service Unavailable' }] };
+        const response = new Response(JSON.stringify(body), { status: 500, statusText: 'Internal Server Error' });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, '500 Internal Server Error');
+    });
+
+    t.test('should not throw when the response body has already been consumed', async () => {
+        const response = new Response('{"errors":[{"message":"x"}]}', { status: 200, statusText: 'OK' });
+        await response.json();
+
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.name, 'HttpError');
+        assert.strictEqual(err.message, '200 OK');
+        assert.strictEqual(err.text, undefined);
+        assert.strictEqual(err.json, undefined);
+    });
 });

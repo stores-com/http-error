@@ -35,12 +35,39 @@ try {
         throw await HttpError.from(response);
     }
 } catch (err) {
-    console.error(err.message); // "404 Not Found"
+    console.error(err.message); // "404 Not Found" — or aggregated body errors[].message values
     console.error(err.text);    // Raw response body
     console.error(err.json);    // Parsed JSON (if applicable)
     console.error(err.cause);   // Original Response object
 }
 ```
+
+### APIs that return errors in the body
+
+Some APIs carry application-level failures in the response body rather than (or in addition to) HTTP status codes. `from()` reads the body and aggregates an `errors[]` envelope into the message automatically — for each entry, the first present of `message` or `detail` is used, joined by `; `. Codes and any other per-error fields stay on `err.json.errors[]`.
+
+```javascript
+const response = await fetch('https://api.example.com/graphql', { /* ... */ });
+
+if (!response.ok) {
+    throw await HttpError.from(response);
+}
+
+const json = await response.json();
+
+if (json?.errors?.length) {
+    throw await HttpError.from(response);
+}
+
+return json;
+```
+
+The default `"${status} ${statusText}"` message is used when `from()` can't read the body (already consumed) or when the body has no `errors[]`.
+
+This covers two widely used envelope shapes:
+
+- [**GraphQL**](https://spec.graphql.org/October2021/#sec-Errors) — every response error entry includes a `message` string. Servers return 200 OK with a top-level `errors[]` for both partial and total failures. The same envelope is used by many REST APIs that signal application-level failures in the body rather than (or in addition to) HTTP status codes.
+- [**JSON:API**](https://jsonapi.org/format/#errors) — error objects use `detail` for the per-occurrence explanation.
 
 ## API
 
@@ -57,3 +84,5 @@ Async factory that creates an `HttpError` and captures the response body:
 - `err.cause` — the original `Response` object
 
 The original response is not consumed (uses `response.clone()`).
+
+If the parsed body carries an `errors[]` array, `err.message` is set to each entry's `message` or `detail` (whichever is present, in that order) joined by `; ` instead of the default `"${status} ${statusText}"`. See [APIs that return errors in the body](#apis-that-return-errors-in-the-body) above.
