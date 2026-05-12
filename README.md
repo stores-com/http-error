@@ -48,7 +48,7 @@ try {
 
 Creates an error with message `"${status} ${statusText}"` and sets `cause` to the response.
 
-### `HttpError.from(response)`
+### `HttpError.from(response, [json])`
 
 Async factory that creates an `HttpError` and captures the response body:
 
@@ -56,21 +56,19 @@ Async factory that creates an `HttpError` and captures the response body:
 - `err.json` — the parsed JSON (if the body is valid JSON)
 - `err.cause` — the original `Response` object
 
-The original response is not consumed (uses `response.clone()`).
+When called with just a `response`, reads the body via `response.clone().text()` so the original response is not consumed.
 
-### `HttpError.fromJson(response, json)`
-
-Synchronous factory for when the caller has already parsed the response body. Useful when an otherwise-ok response carries an application-level error envelope (GraphQL `data.errors[]`, REST 200-with-`errors[]`, etc.):
+When the caller has already consumed the body (via `response.json()`), pass the parsed body as the second argument to skip the body read. Useful for application-level error envelopes on otherwise-ok responses (GraphQL `data.errors[]`, REST 200-with-`errors[]`, etc.):
 
 ```javascript
 const response = await fetch('https://api.example.com/graphql', { /* ... */ });
 const json = await response.json();
 
 if (json.errors?.length) {
-    const err = HttpError.fromJson(response, json);
+    const err = await HttpError.from(response, json);
     err.message = json.errors.map(e => e.message).join('; ');
     throw err;
 }
 ```
 
-The error has `.json` set to the parsed body, `.text` set to `JSON.stringify(json)`, and the default message of `"${status} ${statusText}"` (override after construction if you want a different one).
+In that mode, `.json` is set to the supplied body, `.text` to `JSON.stringify(json)`, and the message defaults to `"${status} ${statusText}"` — override it after construction if you want a different one.

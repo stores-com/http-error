@@ -13,11 +13,22 @@ class HttpError extends Error {
 
     /**
      * Create an HttpError from a fetch Response, capturing the response body as text and JSON.
+     * Pass `json` when the caller has already consumed the body via `response.json()` — useful
+     * for application-level error envelopes on otherwise-ok responses (GraphQL data.errors[],
+     * REST 200 with errors[], etc.) — to skip the body read.
      * @param {Response} response - The fetch Response object.
+     * @param {*} [json] - The already-parsed JSON body, if the caller has it.
      * @returns {Promise<HttpError>} Error with text and json properties.
      */
-    static async from(response) {
+    static async from(response, json) {
         const err = new HttpError(response);
+
+        if (json !== undefined) {
+            err.json = json;
+            err.text = JSON.stringify(json);
+            return err;
+        }
+
         err.text = await response.clone().text().catch(() => {});
 
         if (err.text) {
@@ -28,22 +39,6 @@ class HttpError extends Error {
             }
         }
 
-        return err;
-    }
-
-    /**
-     * Create an HttpError from a fetch Response whose body has already been parsed as JSON.
-     * Useful when an otherwise-ok response carries an application-level error envelope
-     * (GraphQL data.errors[], REST 200 with errors[], etc.) and the caller has already
-     * consumed the body via response.json().
-     * @param {Response} response - The fetch Response object.
-     * @param {*} json - The parsed JSON body.
-     * @returns {HttpError} Error with text and json properties.
-     */
-    static fromJson(response, json) {
-        const err = new HttpError(response);
-        err.json = json;
-        err.text = JSON.stringify(json);
         return err;
     }
 }
