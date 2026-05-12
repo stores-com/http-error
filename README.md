@@ -57,3 +57,20 @@ Async factory that creates an `HttpError` and captures the response body:
 - `err.cause` — the original `Response` object
 
 The original response is not consumed (uses `response.clone()`).
+
+### `HttpError.fromJson(response, json)`
+
+Synchronous factory for when the caller has already parsed the response body. Useful when an otherwise-ok response carries an application-level error envelope (GraphQL `data.errors[]`, REST 200-with-`errors[]`, etc.):
+
+```javascript
+const response = await fetch('https://api.example.com/graphql', { /* ... */ });
+const json = await response.json();
+
+if (json.errors?.length) {
+    const err = HttpError.fromJson(response, json);
+    err.message = json.errors.map(e => e.message).join('; ');
+    throw err;
+}
+```
+
+The error has `.json` set to the parsed body, `.text` set to `JSON.stringify(json)`, and the default message of `"${status} ${statusText}"` (override after construction if you want a different one).

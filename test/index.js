@@ -49,4 +49,26 @@ test('HttpError', { concurrency: true }, async (t) => {
 
         assert.strictEqual(text, 'body');
     });
+
+    t.test('fromJson should set text and json from parsed body', () => {
+        const response = new Response('', { status: 200, statusText: 'OK' });
+        const json = { errors: [{ message: 'Invalid account number' }] };
+        const err = HttpError.fromJson(response, json);
+
+        assert.strictEqual(err.name, 'HttpError');
+        assert.strictEqual(err.message, '200 OK');
+        assert.strictEqual(err.cause, response);
+        assert.deepStrictEqual(err.json, json);
+        assert.strictEqual(err.text, '{"errors":[{"message":"Invalid account number"}]}');
+    });
+
+    t.test('fromJson should let the caller override the message', () => {
+        const response = new Response('', { status: 200, statusText: 'OK' });
+        const json = { errors: [{ message: 'Invalid account number' }] };
+        const err = HttpError.fromJson(response, json);
+        err.message = json.errors.map(e => e.message).join('; ');
+
+        assert.strictEqual(err.message, 'Invalid account number');
+        assert.deepStrictEqual(err.json, json);
+    });
 });
