@@ -57,12 +57,12 @@ if (!response.ok || json.errors?.length) {
 return json;
 ```
 
-`err.message` is the joined human-readable text from each entry — `message`, falling back to `detail`, then `title`. Codes and other per-error fields stay on `err.json.errors[]`.
+`err.message` is the joined human-readable text from each entry — `message`, falling back to `detail`. Codes and other per-error fields stay on `err.json.errors[]`.
 
 This covers two widely used envelope shapes:
 
 - [**GraphQL**](https://spec.graphql.org/October2021/#sec-Errors) — every response error entry includes a `message` string. Servers return 200 OK with a top-level `errors[]` (alongside `data`) for both partial and total failures. The same envelope is used by many REST APIs that signal application-level failures in the body rather than (or in addition to) HTTP status codes.
-- [**JSON:API**](https://jsonapi.org/format/#errors) — error objects use `detail` for the per-occurrence explanation, with `title` as a short human-readable summary.
+- [**JSON:API**](https://jsonapi.org/format/#errors) — error objects use `detail` for the per-occurrence explanation.
 
 ## API
 
@@ -80,4 +80,4 @@ Async factory that creates an `HttpError` and captures the response body:
 
 The original response is not consumed (uses `response.clone()`).
 
-If the parsed body carries an `errors[]` array, `err.message` is set to each entry's `message` / `detail` / `title` (whichever is present, in that order) joined by `; ` instead of the default `"${status} ${statusText}"`. See [APIs that return errors in the body](#apis-that-return-errors-in-the-body) above.
+If the parsed body carries an `errors[]` array, `err.message` is set to each entry's `message` or `detail` (whichever is present, in that order) joined by `; ` instead of the default `"${status} ${statusText}"`. See [APIs that return errors in the body](#apis-that-return-errors-in-the-body) above.

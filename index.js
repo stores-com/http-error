@@ -29,7 +29,7 @@ class HttpError extends Error {
         }
 
         if (err.json?.errors?.length) {
-            const messages = err.json.errors.map(e => e.message ?? e.detail ?? e.title).filter(Boolean);
+            const messages = err.json.errors.map(e => e.message ?? e.detail).filter(Boolean);
 
             if (messages.length) {
                 err.message = messages.join('; ');
