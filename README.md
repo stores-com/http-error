@@ -44,7 +44,7 @@ try {
 
 ### APIs that return errors in the body
 
-Some APIs carry application-level failures in the response body rather than (or in addition to) HTTP status codes. `from()` reads the body and aggregates an `errors[]` envelope automatically — call it before consuming the body yourself so the internal `response.clone()` can read it:
+Some APIs carry application-level failures in the response body rather than (or in addition to) HTTP status codes. `from()` reads the body and aggregates an `errors[]` envelope automatically:
 
 ```javascript
 const response = await fetch('https://api.example.com/graphql', { /* ... */ });
