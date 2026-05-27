@@ -112,4 +112,39 @@ test('HttpError', { concurrency: true }, async (t) => {
         assert.strictEqual(err.text, undefined);
         assert.strictEqual(err.json, undefined);
     });
+
+    t.test('should use a body passed alongside the response without re-reading it', async () => {
+        const response = new Response('{"errors":[{"message":"from the response body"}]}', { status: 200, statusText: 'OK' });
+        const json = {
+            errors: [
+                { code: 'SHIPMENT.CANCEL.FAILURE', message: 'Shipment already tendered' },
+                { code: 'SERVICE.UNAVAILABLE', message: 'Service is currently unavailable' }
+            ]
+        };
+        const err = await HttpError.from(response, json);
+
+        assert.strictEqual(err.name, 'HttpError');
+        assert.strictEqual(err.message, 'Shipment already tendered; Service is currently unavailable');
+        assert.deepStrictEqual(err.json, json);
+        assert.strictEqual(err.text, JSON.stringify(json));
+        assert.strictEqual(err.cause, response);
+        assert(err instanceof Error);
+    });
+
+    t.test('should aggregate JSON:API detail from a body passed alongside the response', async () => {
+        const response = new Response('', { status: 422, statusText: 'Unprocessable Entity' });
+        const json = { errors: [{ code: '422', detail: 'first name is required' }] };
+        const err = await HttpError.from(response, json);
+
+        assert.strictEqual(err.message, 'first name is required');
+        assert.deepStrictEqual(err.json, json);
+    });
+
+    t.test('should fall back to the status message when a passed body has no errors[]', async () => {
+        const response = new Response('', { status: 200, statusText: 'OK' });
+        const err = await HttpError.from(response, { ok: true });
+
+        assert.strictEqual(err.message, '200 OK');
+        assert.deepStrictEqual(err.json, { ok: true });
+    });
 });

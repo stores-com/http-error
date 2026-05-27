@@ -12,24 +12,42 @@ class HttpError extends Error {
     }
 
     /**
-     * Create an HttpError from a fetch Response, capturing the response body as text and JSON.
+     * Create an HttpError from a fetch Response, optionally with an already-parsed body.
+     *
+     * Pass just the `Response` — e.g. for a non-ok status — and the body is captured via
+     * `response.clone()`, leaving the original intact. When you've already read the body — e.g.
+     * a 200 response with an `errors[]` envelope, read with `await response.json()` — pass it as
+     * the second argument so it isn't re-read (a `Response` body can only be read once). Either
+     * way the error keeps the response status and `cause`.
+     *
      * @param {Response} response - The fetch Response object.
+     * @param {object} [json] - An already-parsed JSON body, used instead of reading the response.
      * @returns {Promise<HttpError>} Error with text and json properties.
      */
-    static async from(response) {
+    static async from(response, json) {
         const err = new HttpError(response);
 
-        try {
-            err.text = await response.clone().text();
-        } catch {
-            // Body already consumed or otherwise unreadable
-        }
+        if (json !== undefined) {
+            err.json = json;
 
-        if (err.text) {
             try {
-                err.json = JSON.parse(err.text);
+                err.text = JSON.stringify(json);
             } catch {
-                // Response body is not JSON
+                // Body is not serializable
+            }
+        } else {
+            try {
+                err.text = await response.clone().text();
+            } catch {
+                // Body already consumed or otherwise unreadable
+            }
+
+            if (err.text) {
+                try {
+                    err.json = JSON.parse(err.text);
+                } catch {
+                    // Response body is not JSON
+                }
             }
         }
 

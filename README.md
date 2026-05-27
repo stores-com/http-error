@@ -56,13 +56,15 @@ if (!response.ok) {
 const json = await response.json();
 
 if (json?.errors?.length) {
-    throw await HttpError.from(response);
+    throw await HttpError.from(response, json);
 }
 
 return json;
 ```
 
-The default `"${status} ${statusText}"` message is used when `from()` can't read the body (already consumed) or when the body has no `errors[]`.
+Pass just the `Response` while its body is still unread (the non-ok case). Once you've read it with `response.json()`, pass that parsed body as the second argument — `from(response, json)` — so it isn't re-read (a response body can only be read once). Either way the error keeps the response status and `cause`.
+
+The default `"${status} ${statusText}"` message is used when the body has no `errors[]`.
 
 This covers two widely used envelope shapes:
 
@@ -75,14 +77,17 @@ This covers two widely used envelope shapes:
 
 Creates an error with message `"${status} ${statusText}"` and sets `cause` to the response.
 
-### `HttpError.from(response)`
+### `HttpError.from(response, json)`
 
-Async factory that creates an `HttpError` and captures the response body:
+Async factory that creates an `HttpError` from a `Response` and captures the body:
 
-- `err.text` — the response body as a string
-- `err.json` — the parsed JSON (if the body is valid JSON)
-- `err.cause` — the original `Response` object
+- With **just a `Response`**, the body is read via `response.clone()` (the original is not consumed) and captured as `err.text` and `err.json`.
+- With an **already-parsed `json`** as the second argument, that body is used directly (the response is not read), with `err.text` set to its JSON string — for a 200 response whose JSON you've already read.
 
-The original response is not consumed (uses `response.clone()`).
+In both cases:
 
-If the parsed body carries an `errors[]` array, `err.message` is set to each entry's `message` or `detail` (whichever is present, in that order) joined by `; ` instead of the default `"${status} ${statusText}"`. See [APIs that return errors in the body](#apis-that-return-errors-in-the-body) above.
+- `err.text` — the body as a string
+- `err.json` — the parsed JSON (if the body is/was valid JSON)
+- `err.cause` — the original `Response`
+
+If the body carries an `errors[]` array, `err.message` is set to each entry's `message` or `detail` (whichever is present, in that order) joined by `; ` instead of the default `"${status} ${statusText}"`. See [APIs that return errors in the body](#apis-that-return-errors-in-the-body) above.
