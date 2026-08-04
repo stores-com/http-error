@@ -1,8 +1,8 @@
 {
     "description": "Error class for non-ok HTTP responses from the Fetch API. Captures the response body as text and JSON.",
     "devDependencies": {
-        "@eslint/js": "*",
-        "globals": "*"
+        "@eslint/js": "~10.0.1",
+        "globals": "~17.3.0"
     },
     "keywords": [
         "error",
