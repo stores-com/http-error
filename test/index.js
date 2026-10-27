@@ -14,6 +14,22 @@ test('HttpError', { concurrency: true }, async (t) => {
         assert(err instanceof Error);
     });
 
+    t.test('should use the standard status text when statusText is empty', async () => {
+        // HTTP/2 responses have no reason phrase, so fetch sets statusText to ''
+        const response = new Response('', { status: 500 });
+        const err = new HttpError(response);
+
+        assert.strictEqual(response.statusText, '');
+        assert.strictEqual(err.message, '500 Internal Server Error');
+    });
+
+    t.test('should leave the status text empty for a status code with no standard text', async () => {
+        const response = new Response('', { status: 599 });
+        const err = new HttpError(response);
+
+        assert.strictEqual(err.message, '599 ');
+    });
+
     t.test('should capture non-JSON response body as text', async () => {
         const response = new Response('Not JSON', { status: 400, statusText: 'Bad Request' });
         const err = await HttpError.from(response);
@@ -31,6 +47,14 @@ test('HttpError', { concurrency: true }, async (t) => {
         assert.strictEqual(err.message, '422 Unprocessable Entity');
         assert.strictEqual(err.text, '{"error":"invalid"}');
         assert.deepStrictEqual(err.json, { error: 'invalid' });
+    });
+
+    t.test('should use the standard status text from from() when statusText is empty', async () => {
+        const response = new Response('Not JSON', { status: 404 });
+        const err = await HttpError.from(response);
+
+        assert.strictEqual(err.message, '404 Not Found');
+        assert.strictEqual(err.text, 'Not JSON');
     });
 
     t.test('should handle empty response body', async () => {

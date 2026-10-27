@@ -75,7 +75,7 @@ This covers two widely used envelope shapes:
 
 ### `new HttpError(response)`
 
-Creates an error with message `"${status} ${statusText}"` and sets `cause` to the response.
+Creates an error with message `"${status} ${statusText}"` and sets `cause` to the response. When `statusText` is empty — HTTP/2 responses have no reason phrase — the standard one for the status code is used (e.g. `"500 Internal Server Error"`).
 
 ### `HttpError.from(response, json)`
 

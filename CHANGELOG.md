@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-10-27
+### Fixed
+- When `response.statusText` is empty, the message uses the standard reason phrase for the status code (from `http.STATUS_CODES`), e.g. `"500 Internal Server Error"` instead of `"500 "`. HTTP/2 responses have no reason phrase, and Node 26's `fetch` negotiates HTTP/2 with servers that support it, so the same error now has the same message over HTTP/1.1 and HTTP/2.
+
 ## [1.2.0] - 2026-05-26
 ### Added
 - `HttpError.from()` accepts an optional second argument — an already-parsed JSON body. `from(response)` reads the body via `response.clone()` as before; `from(response, json)` uses the supplied body instead of re-reading the response, for a 200 response whose JSON you've already read (e.g. an `errors[]` envelope), since a response body can only be read once. The error keeps the response status and `cause`. Backward compatible.
