@@ -1,3 +1,5 @@
+const http = require('node:http');
+
 /**
  * Error class for non-ok HTTP responses from the Fetch API.
  * @extends Error
@@ -7,7 +9,8 @@ class HttpError extends Error {
      * @param {Response} response - The fetch Response object.
      */
     constructor(response) {
-        super(`${response.status} ${response.statusText}`, { cause: response });
+        // HTTP/2 has no reason phrase (statusText is ''), so fall back to the standard one
+        super(`${response.status} ${response.statusText || http.STATUS_CODES[response.status] || ''}`, { cause: response });
         this.name = 'HttpError';
     }
 
