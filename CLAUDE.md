@@ -17,8 +17,8 @@ npx eslint .          # Lint
 ## Architecture
 
 Single-file module exporting an `HttpError` class:
-- `new HttpError(response)` — creates error with message `"${status} ${statusText}"`, sets `cause` to the response
-- `HttpError.from(response)` — async factory that also captures `.text` and `.json` from the response body (using `.clone()` to avoid consuming the original)
+- `new HttpError(response)` — creates error with message `"${status} ${statusText}"` (the standard `node:http` reason phrase when `statusText` is empty), sets `cause` to the response
+- `HttpError.from(response, [json])` — async factory that also sets `.text` and `.json`, from `json` when the caller already parsed the body, otherwise from `response.clone()` so the original is not consumed. When the body has an `errors[]` array, its `message`/`detail` values joined with `; ` replace `err.message`
 
 ## Coding Standards
 
